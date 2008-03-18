@@ -2,7 +2,6 @@ require 'mini_magick'
 
 module FastenTheSeatBelt
   def self.included(base)
-    Merb.logger.info "FastenTheSeatBelt just got included into #{base.inspect}"
     base.send(:extend, ClassMethods)
     base.send(:include, InstanceMethods)
     base.send(:include, MiniMagick)
@@ -13,15 +12,12 @@ module FastenTheSeatBelt
   
   module ClassMethods
     def fasten_the_seat_belt(options={})
-      
       # Properties
-      #class << self
-        Picture.property :filename,   :string
-        Picture.property :size, :integer
-        Picture.property :content_type, :string
-        Picture.property :created_at, :datetime
-        Picture.property :updated_at, :datetime
-      #end
+      self.property :filename,   :string
+      self.property :size, :integer
+      self.property :content_type, :string
+      self.property :created_at, :datetime
+      self.property :updated_at, :datetime
     
       # Callbacks to manage the file
       before_save :save_attributes
@@ -36,7 +32,7 @@ module FastenTheSeatBelt
     end
     
     def table_name
-      Picture.table.to_s
+      table.to_s
     end
     
     def fasten_the_seat_belt_options
