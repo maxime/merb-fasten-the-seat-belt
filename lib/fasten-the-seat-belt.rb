@@ -27,7 +27,13 @@ module FastenTheSeatBelt
       # Options
       options[:path_prefix] = 'public' unless options[:path_prefix]
       options[:thumbnails] ||= {}
-
+      
+      if options[:content_types]
+        self.validates_true_for :file, :logic => lambda { verify_content_type }, :message => "File type is incorrect"
+      end
+      
+      options[:content_types] = [options[:content_types]] if options[:content_types] and options[:content_types].class != Array
+      
       @@fasten_the_seat_belt = options
     end
     
@@ -114,6 +120,10 @@ module FastenTheSeatBelt
 
         image.write thumb_filename
       end
+    end
+    
+    def verify_content_type
+      true || self.class.fasten_the_seat_belt_options[:content_types].include?(self.content_type)
     end
   end
 end
