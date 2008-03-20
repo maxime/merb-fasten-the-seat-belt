@@ -66,9 +66,8 @@ module FastenTheSeatBelt
     end  
             
     def save_attributes
-      Merb.logger.info "saving attributes..."
       return false unless @file
-      Merb.logger.info "saving them now"
+      
       # Setup attributes
       [:content_type, :size, :filename].each do |attribute|
         self.send("#{attribute}=", @file[attribute])
@@ -76,8 +75,9 @@ module FastenTheSeatBelt
     end
 
     def save_file
-      Merb.logger.info "Saving file #{self.filename}..."
       return false unless self.filename and @file
+
+      Merb.logger.info "Saving file #{self.filename}..."
 
       # Create directories
       create_root_directory
@@ -89,9 +89,13 @@ module FastenTheSeatBelt
       FileUtils.mkdir(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0]+"/"+dir[1]) unless FileTest.exists?(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0]+"/"+dir[1])
 
       destination = self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0]+"/"+dir[1] + "/" + self.filename
-      FileUtils.mv @file[:tempfile].path, destination
-
+      if File.exists?(@file[:tempfile].path)
+        FileUtils.mv @file[:tempfile].path, destination
+      end
+      
       generate_thumbnails
+      
+      @file = nil
     end
 
     def create_root_directory
