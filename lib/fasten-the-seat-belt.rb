@@ -44,6 +44,11 @@ module FastenTheSeatBelt
     def fasten_the_seat_belt_options
       @@fasten_the_seat_belt
     end
+    
+    def recreate_thumnails!
+      each {|object| object.generate_thumbnails! }
+      true
+    end
   end
   
   module InstanceMethods
@@ -51,7 +56,7 @@ module FastenTheSeatBelt
     # Get file path
     #
     def path(thumb=nil)
-      return '' unless self.filename
+      return nil unless self.filename
       dir = ("%08d" % self.id).scan(/..../)
       basename = self.filename.gsub(/\.(.*)$/, '')
       extension = self.filename.gsub(/^(.*)\./, '')
@@ -93,7 +98,7 @@ module FastenTheSeatBelt
         FileUtils.mv @file[:tempfile].path, destination
       end
       
-      generate_thumbnails
+      generate_thumbnails!
       
       @file = nil
     end
@@ -110,24 +115,44 @@ module FastenTheSeatBelt
       #FileUtils.remove(fasten_the_seat_belt[:path_prefix]+'/pictures/'+dir[0]) if FileTest.exists?(fasten_the_seat_belt[:path_prefix]+'/pictures/'+dir[0]) 
     end
 
-    def generate_thumbnails
+    def generate_thumbnails!
       dir = ("%08d" % self.id).scan(/..../)
       Merb.logger.info "Generate thumbnails... id: #{self.id} path_prefix:#{self.class.fasten_the_seat_belt_options[:path_prefix]} dir0:#{dir[0]} dir1:#{dir[1]} filename:#{self.filename}"
       self.class.fasten_the_seat_belt_options[:thumbnails].each_pair do |key, value|
+        resize_to = value[:size]
+        quality = value[:quality].to_i
+        
         image = MiniMagick::Image.from_file(File.join(Merb.root, (self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.table_name}/" + dir[0]+"/"+dir[1] + "/" + self.filename)))
-        image.resize value
+        image.resize resize_to
 
         basename = self.filename.gsub(/\.(.*)$/, '')
         extension = self.filename.gsub(/^(.*)\./, '')
 
         thumb_filename = self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.table_name}/" + dir[0]+"/"+dir[1] + "/" +  basename + '_' + key.to_s + '.' + extension
 
+        # Delete thumbnail if exists
+        File.delete(thumb_filename) if File.exists?(thumb_filename)
+        
         image.write thumb_filename
+        
+        if quality and !["image/jpeg", "image/jpg"].include?(self.content_type) 
+          puts "FastenTheSeatBelt says: Quality setting not supported for #{self.content_type} files"
+          next
+        end
+        
+        if quality and quality < 100
+          compress_jpeg(thumb_filename, quality)
+        end
       end
     end
     
     def verify_content_type
       true || self.class.fasten_the_seat_belt_options[:content_types].include?(self.content_type)
+    end
+    
+    def compress_jpeg(filename, quality)
+      puts "FastenTheSeatBelt says: Compressing #{filename} to quality #{quality}"
+      system("jpegoptim #{filename} -m#{quality} --strip-all")
     end
   end
 end
