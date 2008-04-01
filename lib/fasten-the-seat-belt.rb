@@ -151,7 +151,7 @@ module FastenTheSeatBelt
     end
     
     def compress_jpeg(filename, quality)
-      puts "FastenTheSeatBelt says: Compressing #{filename} to quality #{quality}"
+      # puts "FastenTheSeatBelt says: Compressing #{filename} to quality #{quality}"
       system("jpegoptim #{filename} -m#{quality} --strip-all")
     end
   end
