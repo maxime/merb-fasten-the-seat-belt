@@ -19,6 +19,8 @@ module FastenTheSeatBelt
       self.property :created_at, :datetime
       self.property :updated_at, :datetime
     
+      self.property :images_are_compressed, :boolean
+    
       # Callbacks to manage the file
       before_save :save_attributes
       after_save :save_file
@@ -101,6 +103,8 @@ module FastenTheSeatBelt
       generate_thumbnails!
       
       @file = nil
+      
+      self.images_are_compressed ||= true 
     end
 
     def create_root_directory
@@ -135,6 +139,8 @@ module FastenTheSeatBelt
         
         image.write thumb_filename
         
+        next if (self.images_are_compressed == false)
+        
         if quality and !["image/jpeg", "image/jpg"].include?(self.content_type) 
           puts "FastenTheSeatBelt says: Quality setting not supported for #{self.content_type} files"
           next
@@ -150,9 +156,39 @@ module FastenTheSeatBelt
       true || self.class.fasten_the_seat_belt_options[:content_types].include?(self.content_type)
     end
     
+    def dont_compress_now!
+      @dont_compress_now = true
+    end
+    
     def compress_jpeg(filename, quality)
       # puts "FastenTheSeatBelt says: Compressing #{filename} to quality #{quality}"
       system("jpegoptim #{filename} -m#{quality} --strip-all")
+    end
+    
+    def compress_now!
+      return false if self.images_are_compressed
+      
+      self.class.fasten_the_seat_belt_options[:thumbnails].each_pair do |key, value|
+        resize_to = value[:size]
+        quality = value[:quality].to_i
+      
+        if quality and !["image/jpeg", "image/jpg"].include?(self.content_type) 
+          puts "FastenTheSeatBelt says: Quality setting not supported for #{self.content_type} files"
+          next
+        end
+        
+        dir = ("%08d" % self.id).scan(/..../)
+        basename = self.filename.gsub(/\.(.*)$/, '')
+        extension = self.filename.gsub(/^(.*)\./, '')
+        thumb_filename = self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.table_name}/" + dir[0]+"/"+dir[1] + "/" +  basename + '_' + key.to_s + '.' + extension
+        
+        if quality and quality < 100
+          compress_jpeg(thumb_filename, quality)
+        end
+      end
+      
+      self.images_are_compressed = true
+      self.save
     end
   end
 end
