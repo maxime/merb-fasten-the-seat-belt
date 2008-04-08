@@ -139,7 +139,7 @@ module FastenTheSeatBelt
         
         image.write thumb_filename
         
-        next if (self.images_are_compressed == false)
+        next if ((self.images_are_compressed == false) || (Merb.env=="test"))
         
         if quality and !["image/jpeg", "image/jpg"].include?(self.content_type) 
           puts "FastenTheSeatBelt says: Quality setting not supported for #{self.content_type} files"
