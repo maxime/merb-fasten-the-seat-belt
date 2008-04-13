@@ -7,10 +7,12 @@ if defined?(Merb::Plugins)
   #}
   
   Merb::BootLoader.before_app_loads do
+    # unless Object.const_defined? "DataMapper"
+    #      raise "Sorry... Merb Fasten The Seat Belt only supports DataMapper..."
+    #    end
+    #    
     # require code that must be loaded before the application
     require File.join(File.dirname(__FILE__), 'fasten-the-seat-belt')
-    
-    DataMapper::Base.send(:include, FastenTheSeatBelt)
   end
   
   #Merb::BootLoader.after_app_loads do

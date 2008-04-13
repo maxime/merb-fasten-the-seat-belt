@@ -13,7 +13,7 @@ module FastenTheSeatBelt
   module ClassMethods
     def fasten_the_seat_belt(options={})
       # Properties
-      self.property :filename,   :string
+      self.property :filename, :string
       self.property :size, :integer
       self.property :content_type, :string
       self.property :created_at, :datetime
@@ -31,7 +31,7 @@ module FastenTheSeatBelt
       options[:thumbnails] ||= {}
       
       if options[:content_types]
-        self.validates_true_for :file, :logic => lambda { verify_content_type }, :message => "File type is incorrect"
+        #self.validates_true_for :file, :logic => lambda { verify_content_type }, :message => "File type is incorrect"
       end
       
       options[:content_types] = [options[:content_types]] if options[:content_types] and options[:content_types].class != Array
@@ -192,3 +192,5 @@ module FastenTheSeatBelt
     end
   end
 end
+
+DataMapper::Base.send(:include, FastenTheSeatBelt)
