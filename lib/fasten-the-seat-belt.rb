@@ -104,7 +104,7 @@ module FastenTheSeatBelt
     end
 
     def create_root_directory
-      root_directory = self.class.fasten_the_seat_belt_options[:path_prefix] + "/#{self.class.storage_name}"
+      root_directory = Merb.root + '/' + self.class.fasten_the_seat_belt_options[:path_prefix] + "/#{self.class.storage_name}"
       FileUtils.mkdir(root_directory) unless FileTest.exists?(root_directory)
     end
 
