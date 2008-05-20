@@ -13,18 +13,18 @@ module FastenTheSeatBelt
   module ClassMethods
     def fasten_the_seat_belt(options={})
       # Properties
-      self.property :filename, :string
-      self.property :size, :integer
-      self.property :content_type, :string
-      self.property :created_at, :datetime
-      self.property :updated_at, :datetime
+      self.property :filename, String
+      self.property :size, Integer
+      self.property :content_type, String
+      self.property :created_at, DateTime
+      self.property :updated_at, DateTime
     
-      self.property :images_are_compressed, :boolean
+      self.property :images_are_compressed, TrueClass
     
       # Callbacks to manage the file
-      before_save :save_attributes
-      after_save :save_file
-      after_destroy :delete_file_and_directory
+      before :save, :save_attributes
+      after :save, :save_file
+      after :destroy, :delete_file_and_directory
       
       # Options
       options[:path_prefix] = 'public' unless options[:path_prefix]
@@ -37,10 +37,6 @@ module FastenTheSeatBelt
       options[:content_types] = [options[:content_types]] if options[:content_types] and options[:content_types].class != Array
       
       @@fasten_the_seat_belt = options
-    end
-    
-    def table_name
-      table.to_s
     end
     
     def fasten_the_seat_belt_options
@@ -69,7 +65,7 @@ module FastenTheSeatBelt
         filename = self.filename
       end
 
-      "/files/#{self.class.table_name}/"+dir[0]+"/"+dir[1] + "/" + filename
+      "/files/#{self.class.storage_name}/"+dir[0]+"/"+dir[1] + "/" + filename
     end  
             
     def save_attributes
@@ -92,10 +88,10 @@ module FastenTheSeatBelt
       # you can thank Jamis Buck for this: http://www.37signals.com/svn/archives2/id_partitioning.php
       dir = ("%08d" % self.id).scan(/..../)
 
-      FileUtils.mkdir(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0]) unless FileTest.exists?(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0])
-      FileUtils.mkdir(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0]+"/"+dir[1]) unless FileTest.exists?(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0]+"/"+dir[1])
+      FileUtils.mkdir(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.storage_name}/"+dir[0]) unless FileTest.exists?(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.storage_name}/"+dir[0])
+      FileUtils.mkdir(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.storage_name}/"+dir[0]+"/"+dir[1]) unless FileTest.exists?(self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.storage_name}/"+dir[0]+"/"+dir[1])
 
-      destination = self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.table_name}/"+dir[0]+"/"+dir[1] + "/" + self.filename
+      destination = self.class.fasten_the_seat_belt_options[:path_prefix]+"/#{self.class.storage_name}/"+dir[0]+"/"+dir[1] + "/" + self.filename
       if File.exists?(@file[:tempfile].path)
         FileUtils.mv @file[:tempfile].path, destination
       end
@@ -108,14 +104,14 @@ module FastenTheSeatBelt
     end
 
     def create_root_directory
-      root_directory = self.class.fasten_the_seat_belt_options[:path_prefix] + "/#{self.class.table_name}"
+      root_directory = self.class.fasten_the_seat_belt_options[:path_prefix] + "/#{self.class.storage_name}"
       FileUtils.mkdir(root_directory) unless FileTest.exists?(root_directory)
     end
 
     def delete_file_and_directory    
       # delete directory
       dir = ("%08d" % self.id).scan(/..../)
-      FileUtils.rm_rf(self.class.fasten_the_seat_belt_options[:path_prefix]+'/#{self.class.table_name}/'+dir[0]+"/"+dir[1]) if FileTest.exists?(self.class.fasten_the_seat_belt_options[:path_prefix]+'/#{self.class.table_name}/'+dir[0]+"/"+dir[1])
+      FileUtils.rm_rf(self.class.fasten_the_seat_belt_options[:path_prefix]+'/#{self.class.storage_name}/'+dir[0]+"/"+dir[1]) if FileTest.exists?(self.class.fasten_the_seat_belt_options[:path_prefix]+'/#{self.class.storage_name}/'+dir[0]+"/"+dir[1])
       #FileUtils.remove(fasten_the_seat_belt[:path_prefix]+'/pictures/'+dir[0]) if FileTest.exists?(fasten_the_seat_belt[:path_prefix]+'/pictures/'+dir[0]) 
     end
 
@@ -126,13 +122,13 @@ module FastenTheSeatBelt
         resize_to = value[:size]
         quality = value[:quality].to_i
         
-        image = MiniMagick::Image.from_file(File.join(Merb.root, (self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.table_name}/" + dir[0]+"/"+dir[1] + "/" + self.filename)))
+        image = MiniMagick::Image.from_file(File.join(Merb.root, (self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.storage_name}/" + dir[0]+"/"+dir[1] + "/" + self.filename)))
         image.resize resize_to
 
         basename = self.filename.gsub(/\.(.*)$/, '')
         extension = self.filename.gsub(/^(.*)\./, '')
 
-        thumb_filename = self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.table_name}/" + dir[0]+"/"+dir[1] + "/" +  basename + '_' + key.to_s + '.' + extension
+        thumb_filename = self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.storage_name}/" + dir[0]+"/"+dir[1] + "/" +  basename + '_' + key.to_s + '.' + extension
 
         # Delete thumbnail if exists
         File.delete(thumb_filename) if File.exists?(thumb_filename)
@@ -180,7 +176,7 @@ module FastenTheSeatBelt
         dir = ("%08d" % self.id).scan(/..../)
         basename = self.filename.gsub(/\.(.*)$/, '')
         extension = self.filename.gsub(/^(.*)\./, '')
-        thumb_filename = self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.table_name}/" + dir[0]+"/"+dir[1] + "/" +  basename + '_' + key.to_s + '.' + extension
+        thumb_filename = self.class.fasten_the_seat_belt_options[:path_prefix]+ "/#{self.class.storage_name}/" + dir[0]+"/"+dir[1] + "/" +  basename + '_' + key.to_s + '.' + extension
         
         if quality and quality < 100
           compress_jpeg(thumb_filename, quality)
@@ -192,5 +188,3 @@ module FastenTheSeatBelt
     end
   end
 end
-
-DataMapper::Base.send(:include, FastenTheSeatBelt)
