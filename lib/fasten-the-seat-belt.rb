@@ -69,7 +69,7 @@ module FastenTheSeatBelt
     end  
             
     def save_attributes
-      return unless @file
+      return unless @file
       
       # Setup attributes
       [:content_type, :size, :filename].each do |attribute|
