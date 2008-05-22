@@ -69,7 +69,7 @@ module FastenTheSeatBelt
     end  
             
     def save_attributes
-      return false unless @file
+      return unless @file
       
       # Setup attributes
       [:content_type, :size, :filename].each do |attribute|
@@ -78,7 +78,7 @@ module FastenTheSeatBelt
     end
 
     def save_file
-      return false unless self.filename and @file
+      return unless self.filename and @file
 
       Merb.logger.info "Saving file #{self.filename}..."
 
