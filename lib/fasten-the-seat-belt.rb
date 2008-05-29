@@ -81,7 +81,8 @@ module FastenTheSeatBelt
       return unless self.filename and @file
 
       Merb.logger.info "Saving file #{self.filename}..."
-
+      Merb.logger.info "self.id #{self.id}"
+      Merb.logger.info "self.new_record? #{self.new_record?}"
       # Create directories
       create_root_directory
 
