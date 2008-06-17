@@ -14,12 +14,12 @@ module FastenTheSeatBelt
     def fasten_the_seat_belt(options={})
       # Properties
       self.property :filename, String
-      self.property :size, Integer
-      self.property :content_type, String
-      self.property :created_at, DateTime
-      self.property :updated_at, DateTime
+      self.property :size, Integer, :lazy => true
+      self.property :content_type, String, :lazy => true
+      self.property :created_at, DateTime, :lazy => true
+      self.property :updated_at, DateTime, :lazy => true
     
-      self.property :images_are_compressed, TrueClass
+      self.property :images_are_compressed, TrueClass, :lazy => true
     
       # Callbacks to manage the file
       before :save, :save_attributes
