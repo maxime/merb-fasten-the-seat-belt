@@ -45,7 +45,7 @@ module FastenTheSeatBelt
     end
     
     def recreate_thumnails!
-      each {|object| object.generate_thumbnails! }
+      all.each {|object| object.generate_thumbnails! }
       true
     end
   end
@@ -128,8 +128,37 @@ module FastenTheSeatBelt
         quality = value[:quality].to_i
         
         image = MiniMagick::Image.from_file(complete_file_path)
-        image.resize resize_to
-
+        if value[:crop]
+          # tw, th are target width and target height
+          
+          tw = resize_to.gsub(/([0-9]*)x([0-9]*)/, '\1').to_i
+          th = resize_to.gsub(/([0-9]*)x([0-9]*)/, '\2').to_i
+          
+          # ow and oh are origin width and origin height
+          ow = image[:width]
+          oh = image[:height]
+          
+          # iw and ih and the dimensions of the cropped picture before resizing
+          # there are 2 cases, iw = ow or ih = oh
+          # using iw / ih = tw / th, we can determine the other values
+          # we use the minimal values to determine the good case
+          iw = [ow, ((oh.to_f*tw.to_f) / th.to_f)].min.to_i
+          ih = [oh, ((ow.to_f*th.to_f) / tw.to_f)].min.to_i
+          
+          # we calculate how much image we must crop
+          shave_width = ((ow.to_f - iw.to_f) / 2.0).to_i
+          shave_height = ((oh.to_f - ih.to_f) / 2.0).to_i
+          
+  
+          # specify the width of the region to be removed from both sides of the image and the height of the regions to be removed from top and bottom.
+          image.shave "#{shave_width}x#{shave_height}"
+          
+          # resize of the pic
+          image.resize resize_to
+        else
+          # no cropping
+          image.resize resize_to
+        end
         basename = self.filename.gsub(/\.(.*)$/, '')
         extension = self.filename.gsub(/^(.*)\./, '')
 
@@ -163,7 +192,7 @@ module FastenTheSeatBelt
     
     def compress_jpeg(filename, quality)
       # puts "FastenTheSeatBelt says: Compressing #{filename} to quality #{quality}"
-      system("jpegoptim #{filename} -m#{quality} --strip-all")
+      system("jpegoptim \"#{filename}\" -m#{quality} --strip-all")
     end
     
     def compress_now!
