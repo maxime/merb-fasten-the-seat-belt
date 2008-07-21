@@ -19,7 +19,7 @@ module FastenTheSeatBelt
       self.property :created_at, DateTime, :lazy => true
       self.property :updated_at, DateTime, :lazy => true
     
-      self.property :images_are_compressed, TrueClass, :lazy => true
+      self.property :images_are_compressed, Boolean, :lazy => true
     
       # Callbacks to manage the file
       before :save, :save_attributes
