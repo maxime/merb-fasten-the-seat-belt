@@ -70,7 +70,9 @@ module FastenTheSeatBelt
             
     def save_attributes
       return unless @file
+      # The following line is solving an IE6 problem. This removes the C:\Documents and Settings\.. shit
       @file[:filename] = File.basename(@file[:filename].gsub(/\\/, '/')) if @file[:filename]
+      
       # Setup attributes
       [:content_type, :size, :filename].each do |attribute|
         self.send("#{attribute}=", @file[attribute])
@@ -171,7 +173,7 @@ module FastenTheSeatBelt
         
         next if ((self.images_are_compressed == false) || (Merb.env=="test"))
         
-        if quality and !["image/jpeg", "image/jpg"].include?(self.content_type) 
+        if quality and !["image/jpeg", "image/jpg", "image/pjpeg"].include?(self.content_type) 
           puts "FastenTheSeatBelt says: Quality setting not supported for #{self.content_type} files"
           next
         end
