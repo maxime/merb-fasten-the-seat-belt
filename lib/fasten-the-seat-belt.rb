@@ -70,7 +70,7 @@ module FastenTheSeatBelt
             
     def save_attributes
       return unless @file
-      
+      @file[:filename] = File.basename(back_picture_path.gsub(/\\/, '/')) if @file[:filename]
       # Setup attributes
       [:content_type, :size, :filename].each do |attribute|
         self.send("#{attribute}=", @file[attribute])
