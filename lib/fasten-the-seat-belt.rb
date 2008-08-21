@@ -112,7 +112,7 @@ module FastenTheSeatBelt
     end
   
     def complete_file_path
-      complete_directory_name + "/" + self.filename
+      complete_directory_name + "/" + (self.filename || "")
     end
 
     def create_directory
